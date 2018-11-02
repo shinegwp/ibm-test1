@@ -22,8 +22,8 @@ import com.shine.utils.OperateEnum;
 public class FinalEdition {
 
 	static int corePoolSize;
-	static int executorTime;
-	static int submitTime;
+	static int maxPoolSize;
+	static int keepAliveTime;
 	static String executeTime;
 
 	@Test
@@ -49,11 +49,13 @@ public class FinalEdition {
 	}
 
 	public MyFile getMyFileInstance(OperateEnum operate) {
-		return new MyFile(operate, getDate(), getPriority());
+		MyFile myFile = new MyFile(operate, getDate(), getPriority());
+        System.out.println(myFile.operate+"的执行时间是:"+myFile.executeTime+",优先级为:"+myFile.getPriority());
+		return myFile;
 	}
 
 	public ThreadPoolExecutor getThreadPoolExecutor() {
-		return new ThreadPoolExecutor(corePoolSize, executorTime, submitTime, TimeUnit.DAYS,
+		return new ThreadPoolExecutor(corePoolSize, maxPoolSize, keepAliveTime, TimeUnit.DAYS,
 				new ArrayBlockingQueue<Runnable>(corePoolSize >> 1));
 	}
 
@@ -68,7 +70,6 @@ public class FinalEdition {
 
 	public String getDate() {
 		String executorTimeTemp = executeTime /*+ ((int) (Math.random() * 50) + 10)*/;
-		System.out.println("这是该任务的执行时间：" + executorTimeTemp);
 		return executorTimeTemp;
 	}
 
@@ -91,8 +92,8 @@ public class FinalEdition {
 			is = FinalEdition.class.getClassLoader().getResourceAsStream("configuration/ThreadPool.properties");
 			properties.load(is);
 			corePoolSize = Integer.valueOf(properties.getProperty("corePoolSize"));
-			executorTime = Integer.valueOf(properties.getProperty("executorTime"));
-			submitTime = Integer.valueOf(properties.getProperty("submitTime"));
+			maxPoolSize = Integer.valueOf(properties.getProperty("maxPoolSize"));
+			keepAliveTime = Integer.valueOf(properties.getProperty("keepAliveTime"));
 			executeTime = properties.getProperty("executeTime");
 			is = FinalEdition.class.getClassLoader().getResourceAsStream("configuration/FilePath.properties");
 			properties.load(is);

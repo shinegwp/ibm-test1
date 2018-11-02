@@ -27,8 +27,8 @@ import org.junit.Test;
  */
 public class AdvanceQueueDemo {
 	int corePoolSize = 10;
-	int executorTime = 10;
-	int submitTime = 10;
+	int maxPoolSize = 10;
+	int keepAliveTime = 10;
 	AdDispatcher dispatcher = AdDispatcher.getInstance();
 
 	@Test
@@ -42,7 +42,7 @@ public class AdvanceQueueDemo {
 			executor.execute(new AdHandlerCut(dispatcher));
 			executor.execute(new AdHandlerPaste(dispatcher));
 			executor.execute(new AdHandlerDelete(dispatcher));
-			Thread.sleep(70000);
+			Thread.sleep(700000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -55,11 +55,14 @@ public class AdvanceQueueDemo {
 	}
 
 	public MyFile getMyFileInstance(String str) {
-		return new MyFile(str, getDate());
+		String date = getDate();
+		MyFile myFile = new MyFile(str,date);
+        System.out.println(str+"操作的执行时间时："+date);
+		return myFile;
 	}
 
 	public ThreadPoolExecutor getThreadPoolExecutor() {
-		return new ThreadPoolExecutor(corePoolSize, executorTime, submitTime, TimeUnit.DAYS,
+		return new ThreadPoolExecutor(corePoolSize, maxPoolSize, keepAliveTime, TimeUnit.DAYS,
 				new ArrayBlockingQueue<Runnable>(corePoolSize >> 1));
 	}
 
@@ -71,8 +74,7 @@ public class AdvanceQueueDemo {
 	}*/
 
 	public String getDate() {
-		String executorTimeTemp = "2018-10-30 10:08:" + ((int) (Math.random() * 50) + 10);
-		System.out.println("这是该任务的执行时间：" + executorTimeTemp);
+		String executorTimeTemp = "2018-11-02 10:48:" + ((int) (Math.random() * 50) + 10);
 		return executorTimeTemp;
 	}
 }
@@ -225,10 +227,13 @@ class AdDispatcher implements AdBaseOperate {
 
 	public  MyFile take(String str) {
 		AdDispatcherTake dt = new AdDispatcherTake(queue, str);
+		Lock lock = new ReentrantLock();
+		lock.lock();
 		Future<MyFile> futureTemp = executor.submit(dt);
 		try {
 			MyFile resultTemp = futureTemp.get();
-			AdDispatcherHandleTake aht = new AdDispatcherHandleTake(resultTemp);
+			Callable<MyFile> aht = new AdDispatcherHandleTake(resultTemp);
+			lock.unlock();
 			System.out.println("我将在" + resultTemp.executeTime + "执行该任务" + resultTemp.operate);
 			Future<MyFile> future = executor.schedule(aht, getDelay(resultTemp.executeTime), TimeUnit.MILLISECONDS);
 			MyFile result = future.get();
